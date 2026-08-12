@@ -17,7 +17,7 @@ export default function ContactPage() {
         <div className="hero-orb hero-orb-2" />
         <div className="mx-auto max-w-6xl px-5 pb-16 pt-24">
           <Reveal>
-            <p className="eyebrow">Contact</p>
+            <p className="section-index">04 / Contact</p>
             <h1 className="font-serif text-4xl font-semibold leading-tight text-white sm:text-5xl">
               Let&apos;s <span className="gradient-text">Connect</span>
             </h1>
@@ -35,6 +35,7 @@ export default function ContactPage() {
           <div>
             <SectionHeading
               align="left"
+              index="01"
               title="Contact Options"
               subtitle="Pick whichever channel works best for you."
             />
@@ -58,6 +59,7 @@ export default function ContactPage() {
           <div>
             <SectionHeading
               align="left"
+              index="02"
               title="Send a Direct Message"
               subtitle="I'll get back to you as soon as I can."
             />

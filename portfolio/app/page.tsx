@@ -83,6 +83,7 @@ export default function HomePage() {
       <section className="section" id="about-teaser">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="01"
             title="Talent Specialist with an AI Edge"
             subtitle={about.paragraphs[0]}
           />
@@ -110,6 +111,7 @@ export default function HomePage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="02"
             title="What I Offer"
             subtitle="Three core services delivered end-to-end, plus a full competency map on the Skills & Services page."
           />
@@ -125,7 +127,20 @@ export default function HomePage() {
             ))}
           </div>
           <Reveal delay={120}>
-            <div className="mt-12 grid gap-4 sm:grid-cols-3">
+            <div className="offer-callout">
+              <p className="offer-callout-label">When to bring me in</p>
+              <p className="offer-callout-text">
+                High-volume sourcing, executive talent search, or modernizing HR workflows.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={150}>
+            <div className="mt-16 text-center">
+              <p className="section-index">03</p>
+            </div>
+          </Reveal>
+          <Reveal delay={180}>
+            <div className="mt-0 grid gap-4 sm:grid-cols-3">
               {highlights.map((h) => (
                 <Link
                   key={h.href}
@@ -156,6 +171,7 @@ export default function HomePage() {
             </div>
           </Reveal>
           <Reveal delay={100}>
+            <p className="section-index">04</p>
             <h2 className="section-title">Human-first hiring, powered by AI tools</h2>
             <p className="mt-5 leading-relaxed text-muted">{about.paragraphs[1]}</p>
             <p className="mt-4 leading-relaxed text-muted">{about.paragraphs[2]}</p>

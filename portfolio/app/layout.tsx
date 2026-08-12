@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import StatusBar from "@/components/StatusBar";
 import Footer from "@/components/Footer";
 import Dock from "@/components/Dock";
 import CustomCursor from "@/components/CustomCursor";
@@ -71,8 +72,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${jetbrains.variable}`}>
       <body className="min-h-screen antialiased">
         <CustomCursor />
-        <Navbar />
-        <main className="pt-16">{children}</main>
+        <header className="site-header">
+          <StatusBar />
+          <Navbar />
+        </header>
+        <main className="pt-[6.25rem]">{children}</main>
         <Footer />
         <Dock />
         <AiAssistant />

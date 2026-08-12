@@ -18,7 +18,7 @@ export default function SkillsServicesPage() {
         <div className="hero-orb hero-orb-3" />
         <div className="mx-auto max-w-6xl px-5 pb-16 pt-24">
           <Reveal>
-            <p className="eyebrow">Capabilities</p>
+            <p className="section-index">03 / Skills &amp; Services</p>
             <h1 className="font-serif text-4xl font-semibold leading-tight text-white sm:text-5xl">
               Skills &amp; <span className="gradient-text">Services</span>
             </h1>
@@ -34,7 +34,7 @@ export default function SkillsServicesPage() {
       {/* ─── Bento grid ─── */}
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
-          <SectionHeading title="What I Bring" />
+          <SectionHeading index="01" title="What I Bring" />
           <div className="bento-grid">
             {bento.map((card, i) => (
               <Reveal key={card.title} delay={i * 60} className={`bento-card ${card.span ? "span-2" : ""}`}>
@@ -51,6 +51,7 @@ export default function SkillsServicesPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="02"
             title="How I Can Help"
             subtitle="Clean, focused service offerings for hiring teams, delivered end-to-end."
           />
@@ -66,6 +67,14 @@ export default function SkillsServicesPage() {
             ))}
           </div>
           <Reveal delay={120}>
+            <div className="offer-callout">
+              <p className="offer-callout-label">When to bring me in</p>
+              <p className="offer-callout-text">
+                High-volume sourcing, executive talent search, or modernizing HR workflows.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={150}>
             <div className="mt-14 text-center">
               <MagneticButton>
                 <Link href="/contact" className="btn btn-primary">

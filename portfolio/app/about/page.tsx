@@ -17,7 +17,7 @@ export default function AboutPage() {
         <div className="hero-orb hero-orb-2" />
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-24 md:grid-cols-2">
           <Reveal>
-            <p className="eyebrow">About Me</p>
+            <p className="section-index">01 / About</p>
             <h1 className="font-serif text-4xl font-semibold leading-tight text-white sm:text-5xl">
               Full bio &amp; <span className="gradient-text">credentials</span>
             </h1>
@@ -46,6 +46,7 @@ export default function AboutPage() {
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="01"
             title="Career Highlights"
             subtitle="A talent research practice built on market intelligence, full-cycle delivery, and modern tooling."
           />
@@ -67,6 +68,7 @@ export default function AboutPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="02"
             title="Academic Background"
             subtitle="A strong foundation in human resource management and business administration."
           />
@@ -89,6 +91,7 @@ export default function AboutPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
+            index="03"
             title="Certifications & Training"
             subtitle="Committed to staying sharp through professional training and AI-era skills."
           />
