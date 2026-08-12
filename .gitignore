@@ -7,3 +7,8 @@ Thumbs.db
 
 # Logs
 *.log
+.vercel
+
+# Skills CLI machine-specific symlink dirs (recreated on install; point at absolute local paths)
+.claude/
+agent/
