@@ -1,0 +1,9 @@
+# Freebuff tool state (databases, logs, run docs) — never commit
+.freebuff/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
