@@ -7,7 +7,7 @@ import { site, contactLinks } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: `Get in touch with ${site.name} — ${site.role}. Email, phone, LinkedIn, and location in Dhaka, Bangladesh.`,
+  description: `Get in touch with ${site.name}, ${site.role}. Email, phone, LinkedIn, and location in Dhaka, Bangladesh.`,
 };
 
 export default function ContactPage() {
@@ -23,7 +23,7 @@ export default function ContactPage() {
             </h1>
             <p className="mt-5 max-w-2xl leading-relaxed text-muted">
               Open to talent acquisition opportunities, HR collaborations, and networking. Reach out through any
-              channel below — I usually respond quickly.
+              channel below, and I usually respond quickly.
             </p>
           </Reveal>
         </div>
@@ -35,7 +35,6 @@ export default function ContactPage() {
           <div>
             <SectionHeading
               align="left"
-              eyebrow="Direct Lines"
               title="Contact Options"
               subtitle="Pick whichever channel works best for you."
             />
@@ -59,7 +58,6 @@ export default function ContactPage() {
           <div>
             <SectionHeading
               align="left"
-              eyebrow="Prefer Email?"
               title="Send a Direct Message"
               subtitle="I'll get back to you as soon as I can."
             />

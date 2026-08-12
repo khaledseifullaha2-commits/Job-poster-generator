@@ -43,7 +43,7 @@ export default function AiAssistant() {
     botSay(
       match
         ? match.a
-        : `Good question! I'm a simple demo assistant — try one of the quick questions below, or email ${"khaledseifullaha@gmail.com"} directly.`
+        : `Good question! I'm a simple demo assistant. Try one of the quick questions below, or email ${"khaledseifullaha@gmail.com"} directly.`
     );
   };
 

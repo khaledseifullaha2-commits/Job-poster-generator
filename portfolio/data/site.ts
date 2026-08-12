@@ -11,7 +11,8 @@ export const site = {
   tagline: "AI-Powered Recruitment · Data-Driven Decisions",
   description:
     "Talent Acquisition and HR professional with practical experience in end-to-end recruitment, candidate sourcing, interview coordination, and HR operations. Familiar with AI-powered productivity tools and compliance standards.",
-  heroShimmer: "AI-Powered Recruitment · Data-Driven Decisions",
+  heroSub:
+    "End-to-end recruitment and AI-powered talent research from Dhaka, Bangladesh.",
 };
 
 export const nav = [
@@ -24,20 +25,20 @@ export const nav = [
 
 export const about = {
   paragraphs: [
-    "I'm Khaled Seifullaha, an Executive Talent Specialist based in Dhaka, Bangladesh, currently working at Enroute International Limited. I support end-to-end recruitment processes — from candidate sourcing and resume screening to interview coordination and hiring decisions.",
+    "I'm Khaled Seifullaha, an Executive Talent Specialist based in Dhaka, Bangladesh, currently working at Enroute International Limited. I support end-to-end recruitment processes, from candidate sourcing and resume screening to interview coordination and hiring decisions.",
     "My approach combines hands-on recruitment operations with modern AI-assisted research tools to reduce manual sourcing effort and improve efficiency. I'm skilled in stakeholder communication, maintaining recruitment records with accuracy and confidentiality, and ensuring a positive candidate experience throughout the hiring lifecycle.",
     "I hold an MBA in Human Resource Management from Jagannath University and am committed to continuous learning through professional training in structured interviewing, HRM self-service, and practical AI productivity tools.",
   ],
   stats: [
     { label: "Candidates Sourced", value: 500, suffix: "+" },
     { label: "Positions Supported", value: 50, suffix: "+" },
-    { label: "Certifications", value: 4, suffix: "" },
+    { label: "Client Satisfaction", value: 100, suffix: "%" },
   ],
 };
 
 export const experience = [
   {
-    date: "Apr 2026 — Present",
+    date: "Apr 2026 - Present",
     role: "Executive, Talent Specialist",
     company: "Enroute International Limited",
     location: "Dhaka, Bangladesh",
@@ -143,10 +144,10 @@ export const education = [
 ];
 
 export const certifications = [
-  "Social and Environmental Compliance for RMG — BKMEA (Feb 2026)",
-  "HRM Self-Service Workshop — Enblooming Initiative (Jun 2026)",
-  "Structured Interview Skills Training — Enblooming Initiative (May 2026)",
-  "Practical AI & Digital Productivity Tools — Enblooming Initiative (Apr 2026)",
+  "Social and Environmental Compliance for RMG - BKMEA (Feb 2026)",
+  "HRM Self-Service Workshop - Enblooming Initiative (Jun 2026)",
+  "Structured Interview Skills Training - Enblooming Initiative (May 2026)",
+  "Practical AI & Digital Productivity Tools - Enblooming Initiative (Apr 2026)",
 ];
 
 export const contactLinks = [
@@ -159,7 +160,7 @@ export const contactLinks = [
 export const chatQA = [
   {
     q: "What do you do?",
-    a: "I'm an Executive Talent Specialist at Enroute International Limited in Dhaka. I handle end-to-end recruitment — from sourcing and screening candidates to coordinating interviews and facilitating hiring decisions. I also use AI-powered tools to make the process faster and smarter.",
+    a: "I'm an Executive Talent Specialist at Enroute International Limited in Dhaka. I handle end-to-end recruitment, from sourcing and screening candidates to coordinating interviews and facilitating hiring decisions. I also use AI-powered tools to make the process faster and smarter.",
   },
   {
     q: "Where are you based?",
@@ -171,7 +172,7 @@ export const chatQA = [
   },
   {
     q: "What tools do you use?",
-    a: "I work with Applicant Tracking Systems (ATS), HRIS platforms, Microsoft Office Suite, and AI-assisted research tools. I'm also skilled in AI prompt writing to optimize sourcing workflows — and I'm a vibe coder too! ⚡",
+    a: "I work with Applicant Tracking Systems (ATS), HRIS platforms, Microsoft Office Suite, and AI-assisted research tools. I'm also skilled in AI prompt writing to optimize sourcing workflows, and I'm a vibe coder too! ⚡",
   },
   {
     q: "How can I reach you?",

@@ -8,7 +8,7 @@ import { site, about, education, certifications } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "About",
-  description: `Full bio, stats, and education of ${site.name} — ${site.role} in Dhaka, Bangladesh.`,
+  description: `Full bio, stats, and education of ${site.name}, ${site.role} in Dhaka, Bangladesh.`,
 };
 
 export default function AboutPage() {
@@ -32,7 +32,7 @@ export default function AboutPage() {
             <div className="hero-photo-frame">
               <Image
                 src="/hero-photo.jpg"
-                alt={`${site.name} — ${site.role}`}
+                alt={`${site.name}, ${site.role}`}
                 width={880}
                 height={660}
                 className="h-full w-full object-cover"
@@ -46,7 +46,7 @@ export default function AboutPage() {
       {/* ─── Stats ─── */}
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
-          <SectionHeading eyebrow="By the Numbers" title="Career Highlights" />
+          <SectionHeading title="Career Highlights" />
           <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
             {about.stats.map((stat, i) => (
               <Reveal key={stat.label} delay={i * 100}>
@@ -66,7 +66,6 @@ export default function AboutPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
-            eyebrow="Education"
             title="Academic Background"
             subtitle="A strong foundation in human resource management and business administration."
           />
@@ -89,7 +88,6 @@ export default function AboutPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
-            eyebrow="Continuous Learning"
             title="Certifications & Training"
             subtitle="Committed to staying sharp through professional training and AI-era skills."
           />

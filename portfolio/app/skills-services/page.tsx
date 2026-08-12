@@ -23,7 +23,7 @@ export default function SkillsServicesPage() {
               Skills &amp; <span className="gradient-text">Services</span>
             </h1>
             <p className="mt-5 max-w-2xl leading-relaxed text-muted">
-              A bento grid of core competencies — from full-cycle recruitment and stakeholder management to
+              A bento grid of core competencies, from full-cycle recruitment and stakeholder management to
               AI-assisted research tools.
             </p>
           </Reveal>
@@ -34,7 +34,7 @@ export default function SkillsServicesPage() {
       {/* ─── Bento grid ─── */}
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
-          <SectionHeading eyebrow="Core Competencies" title="What I Bring" />
+          <SectionHeading title="What I Bring" />
           <div className="bento-grid">
             {bento.map((card, i) => (
               <Reveal key={card.title} delay={i * 60} className={`bento-card ${card.span ? "span-2" : ""}`}>
@@ -51,9 +51,8 @@ export default function SkillsServicesPage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
-            eyebrow="Talent Research Services"
             title="How I Can Help"
-            subtitle="Clean, focused service offerings for hiring teams — delivered end-to-end."
+            subtitle="Clean, focused service offerings for hiring teams, delivered end-to-end."
           />
           <div className="services-grid">
             {services.map((service, i) => (

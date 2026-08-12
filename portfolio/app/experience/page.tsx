@@ -6,7 +6,7 @@ import { site, experience } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "Experience",
-  description: `Career timeline of ${site.name} — ${site.role} at Enroute International Limited, Dhaka.`,
+  description: `Career timeline of ${site.name}, ${site.role} at Enroute International Limited, Dhaka.`,
 };
 
 export default function ExperiencePage() {
@@ -21,7 +21,7 @@ export default function ExperiencePage() {
               My <span className="gradient-text">Journey</span>
             </h1>
             <p className="mt-5 max-w-2xl leading-relaxed text-muted">
-              A focused, growing career in talent acquisition — currently supporting end-to-end recruitment at
+              A focused, growing career in talent acquisition, currently supporting end-to-end recruitment at
               Enroute International Limited.
             </p>
           </Reveal>
@@ -31,7 +31,7 @@ export default function ExperiencePage() {
 
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
-          <SectionHeading eyebrow="Timeline" title="Professional Experience" />
+          <SectionHeading title="Professional Experience" />
           <div className="timeline">
             {experience.map((job, i) => (
               <Reveal key={job.role} delay={i * 100} className="timeline-item">

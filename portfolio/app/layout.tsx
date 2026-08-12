@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrai
 export const metadata: Metadata = {
   metadataBase: new URL("https://khaled-seifullaha.vercel.app"),
   title: {
-    default: `${site.name} — ${site.role}`,
+    default: `${site.name} | ${site.role}`,
     template: `%s | ${site.name}`,
   },
   description: site.description,
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: `${site.name} — Portfolio`,
-    title: `${site.name} — ${site.role}`,
+    siteName: `${site.name} - Portfolio`,
+    title: `${site.name} | ${site.role}`,
     description: site.description,
     images: [
       {
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — ${site.role}`,
+    title: `${site.name} | ${site.role}`,
     description: site.description,
     images: ["/hero-photo.jpg"],
   },

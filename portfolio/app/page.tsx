@@ -10,7 +10,7 @@ import RoleTypewriter from "@/components/RoleTypewriter";
 import { site, about, services } from "@/data/site";
 
 export const metadata: Metadata = {
-  title: `${site.name} — ${site.role}`,
+  title: `${site.name} | ${site.role}`,
   description: site.description,
 };
 
@@ -46,7 +46,7 @@ export default function HomePage() {
         <div className="hero-orb hero-orb-1" />
         <div className="hero-orb hero-orb-2" />
         <div className="hero-orb hero-orb-3" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-24 lg:grid-cols-2 lg:py-32">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-20 lg:grid-cols-2 lg:py-24">
           <Reveal>
             <p className="hero-greeting">
               Hello, I&apos;m<span className="wave-hand">👋</span>
@@ -57,8 +57,7 @@ export default function HomePage() {
             <p className="mt-5 min-h-[2rem] font-mono text-base text-accent-light sm:text-lg">
               <RoleTypewriter />
             </p>
-            <p className="mt-5 max-w-xl leading-relaxed text-muted">{site.description}</p>
-            <p className="shimmer mt-6 font-mono text-sm">{site.heroShimmer}</p>
+            <p className="mt-5 max-w-xl leading-relaxed text-muted">{site.heroSub}</p>
             <div className="mt-9 flex flex-wrap gap-4">
               <MagneticButton>
                 <Link href="/contact" className="btn btn-primary">
@@ -84,14 +83,13 @@ export default function HomePage() {
       <section className="section" id="about-teaser">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
-            eyebrow="Who I Am"
             title="Talent Specialist with an AI Edge"
             subtitle={about.paragraphs[0]}
           />
           <Reveal delay={100}>
-            <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
+            <div className="stat-strip mx-auto max-w-4xl">
               {about.stats.map((stat) => (
-                <div key={stat.label} className="glass-card p-8 text-center">
+                <div key={stat.label}>
                   <p className="font-mono text-4xl font-semibold text-accent-light">{stat.value.toLocaleString("en-US")}{stat.suffix}</p>
                   <p className="mt-3 text-sm text-muted">{stat.label}</p>
                 </div>
@@ -112,9 +110,8 @@ export default function HomePage() {
       <section className="section pt-0">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeading
-            eyebrow="Explore"
             title="What I Offer"
-            subtitle="Three core services delivered end-to-end — plus a full competency map on the Skills & Services page."
+            subtitle="Three core services delivered end-to-end, plus a full competency map on the Skills & Services page."
           />
           <div className="grid gap-6 md:grid-cols-3">
             {services.map((service, i) => (
@@ -155,11 +152,10 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2">
           <Reveal>
             <div className="hero-photo-frame">
-              <Image src="/about-photo.jpg" alt={`${site.name} — ${site.role}`} width={880} height={660} className="h-full w-full object-cover" />
+              <Image src="/about-photo.jpg" alt={`${site.name}, ${site.role}`} width={880} height={660} className="h-full w-full object-cover" />
             </div>
           </Reveal>
           <Reveal delay={100}>
-            <p className="eyebrow">Beyond the Resume</p>
             <h2 className="section-title">Human-first hiring, powered by AI tools</h2>
             <p className="mt-5 leading-relaxed text-muted">{about.paragraphs[1]}</p>
             <p className="mt-4 leading-relaxed text-muted">{about.paragraphs[2]}</p>
