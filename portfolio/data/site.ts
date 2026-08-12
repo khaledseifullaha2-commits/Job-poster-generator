@@ -29,10 +29,10 @@ export const about = {
     "My approach combines hands-on recruitment operations with modern AI-assisted research tools to reduce manual sourcing effort and improve efficiency. I'm skilled in stakeholder communication, maintaining recruitment records with accuracy and confidentiality, and ensuring a positive candidate experience throughout the hiring lifecycle.",
     "I hold an MBA in Human Resource Management from Jagannath University and am committed to continuous learning through professional training in structured interviewing, HRM self-service, and practical AI productivity tools.",
   ],
-  stats: [
-    { label: "Candidates Sourced", value: 500, suffix: "+" },
-    { label: "Positions Supported", value: 50, suffix: "+" },
-    { label: "Client Satisfaction", value: 100, suffix: "%" },
+  highlights: [
+    { icon: "🧭", title: "Talent Mapping", description: "Market & Executive Intelligence" },
+    { icon: "🔄", title: "Full-Cycle", description: "End-to-End Recruitment Support" },
+    { icon: "🤖", title: "AI & Tools", description: "Modern Sourcing Workflows" },
   ],
 };
 

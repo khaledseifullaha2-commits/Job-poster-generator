@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 
 const highlights = [
   {
-    icon: "📈",
-    title: about.stats[0].label,
-    value: `${about.stats[0].value}+`,
+    icon: "🧭",
+    title: about.highlights[0].title,
+    value: about.highlights[0].description,
     href: "/about",
-    label: "View full stats",
+    label: "See career highlights",
   },
   {
     icon: "💼",
@@ -87,11 +87,11 @@ export default function HomePage() {
             subtitle={about.paragraphs[0]}
           />
           <Reveal delay={100}>
-            <div className="stat-strip mx-auto max-w-4xl">
-              {about.stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="font-mono text-4xl font-semibold text-accent-light">{stat.value.toLocaleString("en-US")}{stat.suffix}</p>
-                  <p className="mt-3 text-sm text-muted">{stat.label}</p>
+            <div className="highlight-strip mx-auto max-w-4xl">
+              {about.highlights.map((h) => (
+                <div key={h.title}>
+                  <p className="text-sm font-semibold text-white">{h.title}</p>
+                  <p className="mt-1.5 text-sm text-muted">{h.description}</p>
                 </div>
               ))}
             </div>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
-import Counter from "@/components/Counter";
 import SectionHeading from "@/components/SectionHeading";
 import WaveDivider from "@/components/WaveDivider";
 import { site, about, education, certifications } from "@/data/site";
@@ -43,18 +42,20 @@ export default function AboutPage() {
         <WaveDivider />
       </section>
 
-      {/* ─── Stats ─── */}
+      {/* ─── Career Highlights ─── */}
       <section className="section">
         <div className="mx-auto max-w-6xl px-5">
-          <SectionHeading title="Career Highlights" />
+          <SectionHeading
+            title="Career Highlights"
+            subtitle="A talent research practice built on market intelligence, full-cycle delivery, and modern tooling."
+          />
           <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
-            {about.stats.map((stat, i) => (
-              <Reveal key={stat.label} delay={i * 100}>
-                <div className="glass-card p-10 text-center">
-                  <p className="font-mono text-5xl font-semibold text-accent-light">
-                    <Counter value={stat.value} suffix={stat.suffix} />
-                  </p>
-                  <p className="mt-4 text-sm text-muted">{stat.label}</p>
+            {about.highlights.map((h, i) => (
+              <Reveal key={h.title} delay={i * 100}>
+                <div className="glass-card highlight-card h-full p-8">
+                  <span className="highlight-icon">{h.icon}</span>
+                  <h3 className="highlight-title">{h.title}</h3>
+                  <p className="highlight-desc">{h.description}</p>
                 </div>
               </Reveal>
             ))}
