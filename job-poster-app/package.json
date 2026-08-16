@@ -1,0 +1,21 @@
+{
+  "name": "job-poster-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Standalone Job Poster Generator — manual form, 6 visual templates, 1080x1350 PNG export. No API calls.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "html-to-image": "^1.11.13",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.0.0"
+  }
+}
