@@ -8,17 +8,35 @@ const SAMPLE = {
   title: "Executive — Talent Acquisition",
   companyType: "A Renowned Educational Institution",
   deadline: "URGENT — Apply by 15 September 2026",
-  responsibilities: [
-    "Manage end-to-end recruitment from sourcing to onboarding",
-    "Screen resumes and coordinate interviews with hiring managers",
-    "Maintain candidate database and recruitment documentation",
-    "Ensure a positive candidate experience throughout the hiring lifecycle",
-  ],
-  requirements: [
-    "MBA / BBA in Human Resource Management",
-    "1-2 years of experience in recruitment or HR operations",
-    "Strong communication and stakeholder management skills",
-    "Familiarity with ATS platforms and AI-powered sourcing tools",
+  sections: [
+    {
+      id: "resp",
+      heading: "Key Responsibilities",
+      showHeading: true,
+      fontSize: 0, // 0 = auto
+      bold: false,
+      italic: false,
+      bullets: [
+        "Manage end-to-end recruitment from sourcing to onboarding",
+        "Screen resumes and coordinate interviews with hiring managers",
+        "Maintain candidate database and recruitment documentation",
+        "Ensure a positive candidate experience throughout the hiring lifecycle",
+      ],
+    },
+    {
+      id: "req",
+      heading: "Requirements",
+      showHeading: true,
+      fontSize: 0,
+      bold: false,
+      italic: false,
+      bullets: [
+        "MBA / BBA in Human Resource Management",
+        "1-2 years of experience in recruitment or HR operations",
+        "Strong communication and stakeholder management skills",
+        "Familiarity with ATS platforms and AI-powered sourcing tools",
+      ],
+    },
   ],
   emails: "farhana@enroute.com.bd, support@enroute.com.bd",
   logoText: "Enroute",
@@ -26,11 +44,12 @@ const SAMPLE = {
   logoPreset: "enroute",
   logoSecondaryText: "",
   logoSecondaryImage: "",
+  leftLogoPreset: "none",
+  leftLogoText: "",
+  leftLogoImage: "",
   graphic: "magnifier",
   introText: "A renowned educational institution is looking for",
   badgeText: "We Are Hiring",
-  respHeading: "Key Responsibilities",
-  reqHeading: "Requirements",
   noteText: "Please mention the position applied for in the subject line.",
   templateId: DEFAULT_TEMPLATE_ID,
   themeId: DEFAULT_THEME_ID,
@@ -38,6 +57,7 @@ const SAMPLE = {
   // Element toggles (default on)
   showEco: true,
   showLogos: true,
+  showLeftLogo: true,
   showBadge: true,
   showIntro: true,
   showChip: true,
@@ -86,6 +106,7 @@ export default function App() {
   const previewBoxRef = useRef(null);
   const fileRef = useRef(null);
   const secondaryFileRef = useRef(null);
+  const leftFileRef = useRef(null);
 
   const templateId = form.templateId ?? DEFAULT_TEMPLATE_ID;
   const themeId = form.themeId ?? DEFAULT_THEME_ID;
@@ -104,8 +125,18 @@ export default function App() {
       title: form.title.trim(),
       companyType: form.companyType.trim(),
       deadline: form.deadline.trim(),
-      responsibilities: form.responsibilities.map((r) => r.trim()).filter(Boolean),
-      requirements: form.requirements.map((r) => r.trim()).filter(Boolean),
+      sections: (form.sections || []).map((s) => ({
+        id: s.id,
+        heading: (s.heading || "").trim(),
+        showHeading: s.showHeading !== false,
+        fontSize: Number(s.fontSize) || 0,
+        bold: !!s.bold,
+        italic: !!s.italic,
+        bullets: (s.bullets || []).map((b) => String(b).trim()).filter(Boolean),
+      })),
+      leftLogoText: (form.leftLogoText || "").trim(),
+      leftLogoImage: form.leftLogoImage || "",
+      showLeftLogo: form.showLeftLogo !== false,
       emails: parseEmails(form.emails),
       logoText: form.logoText.trim(),
       logoImage: form.logoImage,
@@ -114,11 +145,10 @@ export default function App() {
       graphic: form.graphic || "none",
       introText: (form.introText || "").trim(),
       badgeText: form.badgeText.trim(),
-      respHeading: form.respHeading.trim(),
-      reqHeading: form.reqHeading.trim(),
       noteText: form.noteText.trim(),
       showEco: form.showEco !== false,
       showLogos: form.showLogos !== false,
+      showLeftLogo: form.showLeftLogo !== false,
       showBadge: form.showBadge !== false,
       showIntro: form.showIntro !== false,
       showChip: form.showChip !== false,
@@ -136,13 +166,62 @@ export default function App() {
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const updateListItem = (key, index, value) =>
-    setForm((prev) => ({ ...prev, [key]: prev[key].map((item, i) => (i === index ? value : item)) }));
+  /* ── Dynamic sections (headings) ── */
+  let sectionSeq = 100;
+  const nextSectionId = () => `sec-${Date.now().toString(36)}-${(sectionSeq++).toString(36)}`;
 
-  const addListItem = (key) => setForm((prev) => ({ ...prev, [key]: [...prev[key], ""] }));
+  const updateSection = (id, patch) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+    }));
 
-  const removeListItem = (key, index) =>
-    setForm((prev) => ({ ...prev, [key]: prev[key].filter((_, i) => i !== index) }));
+  const updateSectionBullet = (id, index, value) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) =>
+        s.id === id ? { ...s, bullets: s.bullets.map((b, i) => (i === index ? value : b)) } : s
+      ),
+    }));
+
+  const addSectionBullet = (id) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => (s.id === id ? { ...s, bullets: [...s.bullets, ""] } : s)),
+    }));
+
+  const removeSectionBullet = (id, index) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) =>
+        s.id === id ? { ...s, bullets: s.bullets.filter((_, i) => i !== index) } : s
+      ),
+    }));
+
+  const addSection = () =>
+    setForm((prev) => ({
+      ...prev,
+      sections: [
+        ...prev.sections,
+        { id: nextSectionId(), heading: "New Section", showHeading: true, fontSize: 0, bold: false, italic: false, bullets: [""] },
+      ],
+    }));
+
+  const removeSection = (id) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.length > 1 ? prev.sections.filter((s) => s.id !== id) : prev.sections,
+    }));
+
+  const moveSection = (id, dir) =>
+    setForm((prev) => {
+      const idx = prev.sections.findIndex((s) => s.id === id);
+      const to = idx + dir;
+      if (idx < 0 || to < 0 || to >= prev.sections.length) return prev;
+      const next = [...prev.sections];
+      [next[idx], next[to]] = [next[to], next[idx]];
+      return { ...prev, sections: next };
+    });
 
   const clearAll = () =>
     setForm({
@@ -150,13 +229,13 @@ export default function App() {
       title: "",
       companyType: "",
       deadline: "",
-      responsibilities: [""],
-      requirements: [""],
+      sections: [
+        { id: "resp", heading: "Key Responsibilities", showHeading: true, fontSize: 0, bold: false, italic: false, bullets: [""] },
+        { id: "req", heading: "Requirements", showHeading: true, fontSize: 0, bold: false, italic: false, bullets: [""] },
+      ],
       emails: "",
       logoText: "",
       badgeText: "We Are Hiring",
-      respHeading: "Key Responsibilities",
-      reqHeading: "Requirements",
       noteText: "Please mention the position applied for in the subject line.",
       templateId,
       themeId,
@@ -164,10 +243,14 @@ export default function App() {
       logoPreset: "custom",
       logoSecondaryText: "",
       logoSecondaryImage: "",
+      leftLogoPreset: "none",
+      leftLogoText: "",
+      leftLogoImage: "",
       graphic: "magnifier",
       introText: "",
       showEco: true,
       showLogos: true,
+      showLeftLogo: true,
       showBadge: true,
       showIntro: true,
       showChip: true,
@@ -206,18 +289,55 @@ export default function App() {
     e.target.value = "";
   };
 
-  const applyExtract = (result, prev) => ({
-    ...prev,
-    title: result.title || prev.title,
-    companyType: result.companyType || prev.companyType,
-    deadline: result.deadline || prev.deadline,
-    responsibilities: result.responsibilities.length ? result.responsibilities : prev.responsibilities,
-    requirements: result.requirements.length ? result.requirements : prev.requirements,
-    emails: result.emails.length ? result.emails.join(", ") : prev.emails,
-    respHeading: result.respHeading || prev.respHeading,
-    reqHeading: result.reqHeading || prev.reqHeading,
-    introText: result.introText || prev.introText,
-  });
+  const onLeftLogoPreset = (preset) => {
+    if (preset === "emc")
+      setForm((p) => ({ ...p, leftLogoPreset: "emc", leftLogoText: "EMC", leftLogoImage: "" }));
+    else if (preset === "enroute")
+      setForm((p) => ({ ...p, leftLogoPreset: "enroute", leftLogoText: "Enroute", leftLogoImage: "" }));
+    else if (preset === "image") setForm((p) => ({ ...p, leftLogoPreset: "image" }));
+    else if (preset === "custom") setForm((p) => ({ ...p, leftLogoPreset: "custom" }));
+    else setForm((p) => ({ ...p, leftLogoPreset: "none", leftLogoText: "", leftLogoImage: "" }));
+  };
+
+  const onLeftLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setForm((p) => ({ ...p, leftLogoImage: String(reader.result), leftLogoPreset: "image" }));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const applyExtract = (result, prev) => {
+    let sections = prev.sections && prev.sections.length ? [...prev.sections] : [];
+    const patchSection = (index, patch) => {
+      if (index < sections.length) sections[index] = { ...sections[index], ...patch };
+      else
+        sections.push({
+          id: nextSectionId(),
+          heading: "Section",
+          showHeading: true,
+          fontSize: 0,
+          bold: false,
+          italic: false,
+          bullets: [],
+          ...patch,
+        });
+    };
+    if (result.responsibilities && result.responsibilities.length) patchSection(0, { bullets: result.responsibilities });
+    if (result.requirements && result.requirements.length) patchSection(1, { bullets: result.requirements });
+    if (result.respHeading) patchSection(0, { heading: result.respHeading });
+    if (result.reqHeading) patchSection(1, { heading: result.reqHeading });
+    return {
+      ...prev,
+      sections,
+      title: result.title || prev.title,
+      companyType: result.companyType || prev.companyType,
+      deadline: result.deadline || prev.deadline,
+      emails: result.emails.length ? result.emails.join(", ") : prev.emails,
+      introText: result.introText || prev.introText,
+    };
+  };
 
   /* ── Live zero-API local parse: instantly populates fields as JD text changes ── */
   useEffect(() => {
@@ -326,38 +446,11 @@ export default function App() {
     }
   }, [exporting, palette.bgColor, posterData.title]);
 
-  const onHeadingChange = (kind, text) => set(kind === "resp" ? "respHeading" : "reqHeading", text);
-
-  const listField = (key, label, placeholderPrefix) => (
-    <div className="jp-field">
-      <label>{label}</label>
-      <div className="jp-list">
-        {form[key].map((item, i) => (
-          <div key={i} className="jp-list-row">
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => updateListItem(key, i, e.target.value)}
-              placeholder={`${placeholderPrefix} ${i + 1}`}
-              className={inputClass}
-            />
-            <button
-              type="button"
-              className="jp-remove"
-              onClick={() => removeListItem(key, i)}
-              aria-label={`Remove ${placeholderPrefix.toLowerCase()} ${i + 1}`}
-              disabled={form[key].length <= 1}
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
-      <button type="button" className="jp-add" onClick={() => addListItem(key)}>
-        + Add {placeholderPrefix}
-      </button>
-    </div>
-  );
+  const onHeadingChange = (sectionId, text) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, heading: text } : s)),
+    }));
 
   return (
     <div className="jp-shell">
@@ -531,6 +624,7 @@ export default function App() {
                   {[
                     ["showEco", "Eco save block (top-left)"],
                     ["showLogos", "Company logos (top-right)"],
+                    ["showLeftLogo", "Logo (top-left)"],
                     ["showBadge", "WE ARE HIRING badge"],
                     ["showIntro", "Intro phrase"],
                     ["showChip", "Company type chip"],
@@ -651,6 +745,51 @@ export default function App() {
                 ) : null}
               </div>
 
+              {/* Left-side logo (top-left, shown beside the eco block) */}
+              <div className="jp-field">
+                <label htmlFor="left-logo-preset">
+                  Logo (top-left) <span className="jp-hint-inline">optional — shown beside the eco block</span>
+                </label>
+                <select
+                  id="left-logo-preset"
+                  value={form.leftLogoPreset}
+                  onChange={(e) => onLeftLogoPreset(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="none">None</option>
+                  <option value="enroute">Enroute</option>
+                  <option value="emc">EMC</option>
+                  <option value="custom">Custom text…</option>
+                  <option value="image">Upload image…</option>
+                </select>
+                {form.leftLogoPreset === "custom" ? (
+                  <input
+                    type="text"
+                    value={form.leftLogoText}
+                    onChange={(e) => set("leftLogoText", e.target.value)}
+                    placeholder="Logo text, e.g. Your Brand"
+                    className={inputClass}
+                  />
+                ) : null}
+                {form.leftLogoPreset === "image" ? (
+                  <div className="jp-logo-row">
+                    <button type="button" className="jp-btn jp-btn-ghost" onClick={() => leftFileRef.current?.click()}>
+                      Choose Image
+                    </button>
+                    <span className="jp-hint-inline">PNG / JPG — image wins over text</span>
+                  </div>
+                ) : null}
+                <input ref={leftFileRef} type="file" accept="image/*" onChange={onLeftLogoUpload} hidden />
+                {form.leftLogoImage ? (
+                  <div className="jp-logo-preview">
+                    <img src={form.leftLogoImage} alt="Left logo preview" />
+                    <button type="button" className="jp-remove-sm" onClick={() => set("leftLogoImage", "")}>
+                      ✕ Remove left logo image
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
               {/* Recruitment graphic illustration */}
               <div className="jp-field">
                 <label htmlFor="graphic">Recruitment Graphic</label>
@@ -723,34 +862,136 @@ export default function App() {
                 />
               </div>
 
-              <div className="jp-grid-2">
-                <div className="jp-field">
-                  <label htmlFor="resp-heading">Responsibilities Heading</label>
-                  <input
-                    id="resp-heading"
-                    type="text"
-                    value={form.respHeading}
-                    onChange={(e) => set("respHeading", e.target.value)}
-                    placeholder="Key Responsibilities"
-                    className={inputClass}
-                  />
-                </div>
-                <div className="jp-field">
-                  <label htmlFor="req-heading">Requirements Heading</label>
-                  <input
-                    id="req-heading"
-                    type="text"
-                    value={form.reqHeading}
-                    onChange={(e) => set("reqHeading", e.target.value)}
-                    placeholder="Requirements"
-                    className={inputClass}
-                  />
-                </div>
+              {/* ── Dynamic sections: heading, visibility, typography, bullets, reorder ── */}
+              <div className="jp-field">
+                <label>Sections &amp; Headings</label>
+                {form.sections.map((sec, idx) => (
+                  <div key={sec.id} className="jp-section">
+                    <div className="jp-section-head">
+                      <span className="jp-section-title">
+                        {sec.heading.trim() ? sec.heading : `Section ${idx + 1}`}
+                        <span className="jp-hint-inline"> #{idx + 1}</span>
+                      </span>
+                      <div className="jp-section-tools">
+                        <button
+                          type="button"
+                          className="jp-icon-btn"
+                          onClick={() => moveSection(sec.id, -1)}
+                          disabled={idx === 0}
+                          aria-label={`Move section ${idx + 1} up`}
+                          title="Move section up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="jp-icon-btn"
+                          onClick={() => moveSection(sec.id, 1)}
+                          disabled={idx === form.sections.length - 1}
+                          aria-label={`Move section ${idx + 1} down`}
+                          title="Move section down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="jp-icon-btn jp-icon-danger"
+                          onClick={() => removeSection(sec.id)}
+                          disabled={form.sections.length <= 1}
+                          aria-label={`Delete section ${idx + 1}`}
+                          title="Delete section"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={sec.heading}
+                      onChange={(e) => updateSection(sec.id, { heading: e.target.value })}
+                      placeholder="Section heading, e.g. Key Responsibilities"
+                      className={inputClass}
+                    />
+                    <div className="jp-section-opts">
+                      <label className="jp-check">
+                        <input
+                          type="checkbox"
+                          checked={sec.showHeading !== false}
+                          onChange={(e) => updateSection(sec.id, { showHeading: e.target.checked })}
+                        />
+                        <span>Show heading</span>
+                      </label>
+                      <label className="jp-size-field">
+                        <span>Text size</span>
+                        <input
+                          type="number"
+                          min={8}
+                          max={60}
+                          value={sec.fontSize ? String(sec.fontSize) : ""}
+                          onChange={(e) =>
+                            updateSection(sec.id, { fontSize: e.target.value === "" ? 0 : Number(e.target.value) })
+                          }
+                          placeholder="Auto"
+                          aria-label={`Text size for section ${idx + 1}`}
+                        />
+                        <span>px</span>
+                      </label>
+                      <label className="jp-check">
+                        <input
+                          type="checkbox"
+                          checked={!!sec.bold}
+                          onChange={(e) => updateSection(sec.id, { bold: e.target.checked })}
+                        />
+                        <span>
+                          <b>Bold</b>
+                        </span>
+                      </label>
+                      <label className="jp-check">
+                        <input
+                          type="checkbox"
+                          checked={!!sec.italic}
+                          onChange={(e) => updateSection(sec.id, { italic: e.target.checked })}
+                        />
+                        <span>
+                          <i>Italic</i>
+                        </span>
+                      </label>
+                    </div>
+                    <div className="jp-list">
+                      {sec.bullets.map((item, i) => (
+                        <div key={i} className="jp-list-row">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => updateSectionBullet(sec.id, i, e.target.value)}
+                            placeholder={`Bullet ${i + 1}`}
+                            className={inputClass}
+                          />
+                          <button
+                            type="button"
+                            className="jp-remove"
+                            onClick={() => removeSectionBullet(sec.id, i)}
+                            aria-label={`Remove bullet ${i + 1}`}
+                            disabled={sec.bullets.length <= 1}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" className="jp-add" onClick={() => addSectionBullet(sec.id)}>
+                      + Add bullet
+                    </button>
+                  </div>
+                ))}
+                <button type="button" className="jp-add jp-add-section" onClick={addSection}>
+                  + Add New Section / Heading
+                </button>
+                <p className="jp-hint">
+                  Reorder sections with ↑ ↓, delete with ✕, untick “Show heading” to hide it, and set bullet text
+                  size / bold / italic per section. You can also click headings directly on the poster to edit them.
+                </p>
               </div>
-              <p className="jp-hint">Tip: you can also click the section headings directly on the poster to edit them.</p>
-
-              {listField("responsibilities", "Responsibilities", "Responsibility")}
-              {listField("requirements", "Requirements", "Requirement")}
 
               <div className="jp-field">
                 <label htmlFor="emails">Submission Emails</label>

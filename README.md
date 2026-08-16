@@ -50,6 +50,10 @@ project with no unrelated folders inside.
   custom text, or uploaded image) **plus an optional partner/secondary logo
   displayed simultaneously beside it**, and a centered "WE ARE HIRING" badge
   (text editable; red-bordered in the corporate template).
+- **Logo on both sides** — a separate **top-left logo** (None / Enroute / EMC /
+  custom text / uploaded image) renders beside the eco block, while the
+  top-right logo cluster stays independent — so you can place branding on
+  either side (or both) of the poster.
 - **Recruitment graphics** — optional inline-SVG illustrations rendered beside
   the job title on the corporate template: **Magnifying Glass & Candidate**
   (with floating icons, stars and dashed arc), **Hand & Pen (signature)**, and
@@ -64,6 +68,14 @@ project with no unrelated folders inside.
 - **Click-to-edit headings** — edit the card headings directly on the poster
   (e.g. `RESPONSIBILITIES` → `KEY DUTIES`); the form inputs stay in sync.
   Badge text and the submission note are also editable.
+- **Dynamic sections & headings** — the two fixed blocks are now a fully
+  flexible list of sections. Each section has an editable heading, a
+  **“Show heading” toggle** (hide the heading bar, keep the bullets),
+  per-section **bullet text size**, **bold** and **italic** toggles, its own
+  add/remove bullet list, **↑ ↓ reorder buttons**, a delete button, and you can
+  **add unlimited new sections/headings** with the “+ Add New Section” button.
+  Sections render in order on the poster in both the 2-column and stacked
+  layouts, and the AI parser still fills the first two sections as before.
 - **Clean footer** — a "PLEASE NOTE" notice box with the submission emails
   (e.g. `farhana@enroute.com.bd`, `support@enroute.com.bd`) and the
   instruction "Please mention the position applied for in the subject line."

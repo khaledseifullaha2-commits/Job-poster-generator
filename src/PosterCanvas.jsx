@@ -340,6 +340,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
   const show = {
     eco: data.showEco !== false,
     logos: data.showLogos !== false,
+    leftLogo: data.showLeftLogo !== false,
     badge: data.showBadge !== false,
     intro: data.showIntro !== false && !!introText,
     chip: data.showChip !== false,
@@ -355,13 +356,29 @@ const PosterCanvas = forwardRef(function PosterCanvas(
 
   // Stacked full-width rows have less vertical room per card — cap bullets lower.
   const maxPerCard = stacked ? 4 : 6;
-  const shownRespons = responsibilities.slice(0, maxPerCard);
-  const shownReqs = requirements.slice(0, maxPerCard);
-  const respExtra = responsibilities.length - shownRespons.length;
-  const reqExtra = requirements.length - shownReqs.length;
-
-  const bulletLines = Math.max(shownRespons.length, shownReqs.length);
-  const bSize = bulletSize([...responsibilities, ...requirements]);
+  const rawSections =
+    data.sections && data.sections.length
+      ? data.sections
+      : [
+          { id: "resp", heading: data.respHeading || "Key Responsibilities", showHeading: true, fontSize: 0, bold: false, italic: false, bullets: responsibilities },
+          { id: "req", heading: data.reqHeading || "Requirements", showHeading: true, fontSize: 0, bold: false, italic: false, bullets: requirements },
+        ];
+  const sections = rawSections.map((s) => ({
+    id: s.id,
+    heading: (s.heading || "").trim() || "Section",
+    showHeading: s.showHeading !== false,
+    fontSize: Math.max(8, Math.min(60, Number(s.fontSize) || 0)),
+    bold: !!s.bold,
+    italic: !!s.italic,
+    bullets: (s.bullets || []).map((b) => String(b).trim()).filter(Boolean),
+  }));
+  const shownSections = sections.map((s) => ({
+    ...s,
+    shown: s.bullets.slice(0, maxPerCard),
+    extra: Math.max(0, s.bullets.length - maxPerCard),
+  }));
+  const bulletLines = Math.max(0, ...shownSections.map((s) => s.shown.length));
+  const bSize = bulletSize(sections.flatMap((s) => s.bullets));
 
   const markerGlow = (color) => (t.neon ? `0 0 12px ${color}` : `0 0 8px ${color}66`);
 
@@ -445,7 +462,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     </div>
   );
 
-  const singleLogo = (text, image, fontSize, maxW, maxH, color) => {
+  const singleLogo = (text, image, fontSize, maxW, maxH, color, align = "flex-end") => {
     if (image) {
       return (
         <img
@@ -457,7 +474,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     }
     if (!(text || "").trim()) return null;
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: align }}>
         <div
           style={{
             fontFamily: SERIF,
@@ -498,13 +515,28 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     );
   })();
 
+  const leftLogo =
+    show.leftLogo && (data.leftLogoText || data.leftLogoImage)
+      ? singleLogo(data.leftLogoText, data.leftLogoImage, 32, 200, 66, t.accent, "flex-start")
+      : null;
+
   const headerRow = (() => {
     const left = show.eco ? ecoBlock : null;
     const right = show.logos ? logoCluster : null;
-    if (!left && !right) return null;
+    if (!leftLogo && !left && !right) return null;
+    const leftCluster =
+      leftLogo || left ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {leftLogo ? <div>{leftLogo}</div> : null}
+          {leftLogo && left ? (
+            <div style={{ width: 1, height: 46, background: corp ? "rgba(27,49,103,0.2)" : t.cardBorder }} />
+          ) : null}
+          {left ? left : null}
+        </div>
+      ) : null;
     return (
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20 }}>
-        {left ? left : <span />}
+        {leftCluster || <span />}
         {right ? (
           <div style={{ minWidth: 180, minHeight: 58, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             {right}
@@ -846,8 +878,12 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     overflow: "hidden",
   };
 
-  const sectionHeader = (kind, heading) =>
-    corp ? (
+  const sectionKind = (idx) => (idx === 0 ? "resp" : idx === 1 ? "req" : idx % 2 === 0 ? "resp" : "req");
+
+  const sectionHeader = (s, idx) => {
+    if (s.showHeading === false) return null;
+    const kind = sectionKind(idx);
+    return corp ? (
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: stacked ? 16 : 22 }}>
         <div
           style={{
@@ -862,8 +898,8 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         >
           {kind === "resp" ? <ClipboardIcon size={19} color="#ffffff" /> : <UsersIcon size={19} color="#ffffff" />}
           <EditableText
-            value={heading}
-            onCommit={(text) => onHeadingChange?.(kind, text)}
+            value={s.heading}
+            onCommit={(text) => onHeadingChange?.(s.id, text)}
             style={{
               fontSize: 15.5,
               letterSpacing: "0.18em",
@@ -906,8 +942,8 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           {kind === "resp" ? <ListIcon size={23} color={t.tileBIcon} /> : <CheckIcon size={23} color={t.tileBIcon} />}
         </div>
         <EditableText
-          value={heading}
-          onCommit={(text) => onHeadingChange?.(kind, text)}
+          value={s.heading}
+          onCommit={(text) => onHeadingChange?.(s.id, text)}
           style={{
             fontSize: 16,
             letterSpacing: "0.2em",
@@ -919,8 +955,9 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         />
       </div>
     );
+  };
 
-  const bulletList = (items, kind, extra) => (
+  const bulletList = (items, kind, extra, s) => (
     <div>
       {items.map((item, i) => (
         <div key={i} style={{ display: "flex", gap: 13, alignItems: "flex-start", marginBottom: 14 }}>
@@ -935,7 +972,17 @@ const PosterCanvas = forwardRef(function PosterCanvas(
               flexShrink: 0,
             }}
           />
-          <span style={{ fontSize: bSize, lineHeight: 1.5, color: t.body }}>{item}</span>
+          <span
+            style={{
+              fontSize: s && s.fontSize > 0 ? s.fontSize : bSize,
+              lineHeight: 1.5,
+              color: t.body,
+              fontWeight: s && s.bold ? 700 : 400,
+              fontStyle: s && s.italic ? "italic" : "normal",
+            }}
+          >
+            {item}
+          </span>
         </div>
       ))}
       {extra > 0 ? (
@@ -946,13 +993,13 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     </div>
   );
 
-  const sectionCard = (kind, heading, items, extra) => (
-    <div style={cardBase}>
-      {sectionHeader(kind, heading)}
-      {items.length === 0 ? (
+  const sectionCard = (s, idx) => (
+    <div key={s.id} style={cardBase}>
+      {sectionHeader(s, idx)}
+      {s.shown.length === 0 ? (
         <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>Not provided</div>
       ) : (
-        bulletList(items, kind, extra)
+        bulletList(s.shown, sectionKind(idx), s.extra, s)
       )}
     </div>
   );
@@ -1181,8 +1228,15 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           alignItems: "stretch",
         }}
       >
-        {sectionCard("resp", (data.respHeading || "").trim() || "Key Responsibilities", shownRespons, respExtra)}
-        {sectionCard("req", (data.reqHeading || "").trim() || "Requirements", shownReqs, reqExtra)}
+        {shownSections.length === 0 ? (
+          <div style={cardBase}>
+            <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>
+              Add sections in the left panel to build the poster.
+            </div>
+          </div>
+        ) : (
+          shownSections.map((s, idx) => sectionCard(s, idx))
+        )}
       </div>
       <div style={{ marginTop: "auto", paddingTop: 30 }}>{show.footer ? pleaseNote : null}</div>
     </>
@@ -1201,8 +1255,15 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           alignItems: "stretch",
         }}
       >
-        {sectionCard("resp", (data.respHeading || "").trim() || "Key Responsibilities", shownRespons, respExtra)}
-        {sectionCard("req", (data.reqHeading || "").trim() || "Requirements", shownReqs, reqExtra)}
+        {shownSections.length === 0 ? (
+          <div style={cardBase}>
+            <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>
+              Add sections in the left panel to build the poster.
+            </div>
+          </div>
+        ) : (
+          shownSections.map((s, idx) => sectionCard(s, idx))
+        )}
       </div>
     );
 
