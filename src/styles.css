@@ -719,6 +719,18 @@ select.jp-input option {
   margin-top: 4px;
 }
 
+/* ── Word-style editable text on the poster ── */
+.jp-editable {
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s;
+}
+
+.jp-editable:hover,
+.jp-editable:focus {
+  outline-color: rgba(138, 162, 201, 0.75);
+}
+
 /* ── Sample JD button ── */
 .jp-sample {
   align-self: flex-start;

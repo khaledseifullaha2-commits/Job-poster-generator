@@ -37,8 +37,19 @@ project with no unrelated folders inside.
   phrase, title, chip and ribbon; the corporate template centers its ribbon +
   graphic group symmetrically).
 - **Card layout toggle** — Side-by-Side 2-Column Grid or Stacked Full-Width
-  Rows (stacked rows cap at 4 bullets per card and show "+N more in the full
-  JD" so long JDs never overflow the canvas).
+  Rows. Deleting a section makes the remaining ones reflow to fill the freed
+  space (a single section takes the full width; an odd last card spans both
+  columns).
+- **Everything fits, automatically** — the poster never truncates text: every
+  bullet renders in full and a measurement-driven auto-fit shrinks bullet
+  font size (and compacts card spacing) so the whole JD always fits inside the
+  fixed 1080×1350 canvas. Short JDs keep the comfortable auto size; extreme
+  long JDs shrink to fit.
+- **Word-style inline editing** — every text element on the poster (intro,
+  title, company chip, deadline, badge, section headings, every bullet, the
+  emails and the submission note) is directly editable on the canvas with a
+  subtle dashed border on hover/focus, exactly like editing in Microsoft
+  Word; edits sync back to the form inputs and the exports stay clean.
 - **Split heading support** — an editable **intro phrase** (e.g. "One of the
   country's leading conglomerates in the healthcare and education sectors is
   looking for") renders cleanly above the main two-tone job title; both parts
@@ -81,7 +92,11 @@ project with no unrelated folders inside.
   instruction "Please mention the position applied for in the subject line."
   No placeholder names (no "Khaled Seifullaha", no "AI-Powered Recruitment").
 - **Export** — `html-to-image` captures the canvas at full 1080×1350 as a
-  high-res PNG with the correct self-hosted fonts.
+  high-res PNG with the correct self-hosted fonts (any active edit outline is
+  blurred out before capture).
+- **Info bar** — the deadline tile stands on its own; the "Apply Via" block
+  was removed from under the deadline (emails live in the CTA and PLEASE
+  NOTE footer instead).
 
 ## Run it
 

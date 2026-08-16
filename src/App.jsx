@@ -423,6 +423,7 @@ export default function App() {
     setExporting(true);
     try {
       await document.fonts.ready;
+      document.activeElement?.blur?.(); // drop any Word-style edit outline before capture
       const dataUrl = await toPng(node, {
         width: POSTER_WIDTH,
         height: POSTER_HEIGHT,
@@ -451,6 +452,10 @@ export default function App() {
       ...prev,
       sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, heading: text } : s)),
     }));
+
+  const onFieldChange = (field, value) => set(field, value);
+
+  const onBulletChange = (sectionId, index, text) => updateSectionBullet(sectionId, index, text);
 
   return (
     <div className="jp-shell">
@@ -1003,7 +1008,7 @@ export default function App() {
                   placeholder="farhana@enroute.com.bd, support@enroute.com.bd"
                   className={inputClass}
                 />
-                <p className="jp-hint">Comma-separated. Shown in the info bar, CTA and PLEASE NOTE footer.</p>
+                <p className="jp-hint">Comma-separated. Shown in the CTA and PLEASE NOTE footer.</p>
               </div>
 
               <div className="jp-field">
@@ -1056,6 +1061,8 @@ export default function App() {
                   templateId={templateId}
                   layout={form.layout ?? "split"}
                   onHeadingChange={onHeadingChange}
+                  onFieldChange={onFieldChange}
+                  onBulletChange={onBulletChange}
                 />
               </div>
             </div>

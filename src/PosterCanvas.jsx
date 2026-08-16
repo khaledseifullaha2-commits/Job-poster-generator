@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useRef } from "react";
+import React, { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { buildPalette } from "./templates.js";
 
 /**
@@ -230,7 +230,8 @@ const DeskGraphic = ({ width = 300 }) => (
 
 /* ── Helpers ── */
 
-const EditableText = ({ value, onCommit, style }) => {
+/** Keep a contentEditable element's text in sync with `value` without clobbering it while focused. */
+const useEditableSync = (value) => {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -238,17 +239,24 @@ const EditableText = ({ value, onCommit, style }) => {
       el.textContent = value;
     }
   }, [value]);
+  return ref;
+};
+
+/** Word-style inline-editable text: subtle dashed outline on hover/focus (CSS), edits reported via onCommit. */
+const EditableText = ({ value, onCommit, style, label = "Editable text" }) => {
+  const ref = useEditableSync(value);
   return (
     <span
       ref={ref}
+      className="jp-editable"
       contentEditable
       suppressContentEditableWarning
       role="textbox"
-      aria-label="Editable section heading"
+      aria-label={label}
       tabIndex={0}
       spellCheck={false}
       onInput={(e) => onCommit?.(e.currentTarget.textContent)}
-      style={{ outline: "none", cursor: "text", ...style }}
+      style={{ cursor: "text", borderRadius: 3, ...style }}
     />
   );
 };
@@ -265,12 +273,12 @@ function bulletSize(items) {
   return 18;
 }
 
-/** Split a title into two color spans: first half navy, second half red. */
-function splitTitle(title) {
+/** Approximate percentage where the first half of the words ends (for the two-tone gradient split). */
+function titleSplitPct(title) {
   const words = title.split(/\s+/).filter(Boolean);
-  if (words.length < 2) return { a: title, b: "" };
-  const mid = Math.ceil(words.length / 2);
-  return { a: words.slice(0, mid).join(" "), b: words.slice(mid).join(" ") };
+  if (words.length < 2) return 50;
+  const first = words.slice(0, Math.ceil(words.length / 2)).join(" ");
+  return Math.max(15, Math.min(85, Math.round((first.length / Math.max(1, title.length)) * 100)));
 }
 
 /** Lighten (amt > 0) or darken (amt < 0) a #rrggbb color. */
@@ -313,7 +321,7 @@ const CORP = {
 };
 
 const PosterCanvas = forwardRef(function PosterCanvas(
-  { data, themeId, templateId, layout = "split", onHeadingChange },
+  { data, themeId, templateId, layout = "split", onHeadingChange, onFieldChange, onBulletChange },
   ref
 ) {
   const t = buildPalette(themeId, templateId);
@@ -335,6 +343,10 @@ const PosterCanvas = forwardRef(function PosterCanvas(
   const emails = data.emails || [];
   const primaryEmail = emails[0];
   const extraEmails = emails.length - 1;
+  const editEmail = (index, text) => {
+    const next = emails.map((e, i) => (i === index ? text : e));
+    onFieldChange?.("emails", next.join(", "));
+  };
 
   // Per-part toggles (default on) + per-part color overrides (default: template)
   const show = {
@@ -354,8 +366,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
   const cardBgColor = (data.cardBg || "").trim();
   const footerColor = (data.footerColor || "").trim();
 
-  // Stacked full-width rows have less vertical room per card — cap bullets lower.
-  const maxPerCard = stacked ? 4 : 6;
+  // All sections render in full — no truncation. Bullet font auto-shrinks to fit the fixed canvas.
   const rawSections =
     data.sections && data.sections.length
       ? data.sections
@@ -367,18 +378,67 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     id: s.id,
     heading: (s.heading || "").trim() || "Section",
     showHeading: s.showHeading !== false,
-    fontSize: Math.max(8, Math.min(60, Number(s.fontSize) || 0)),
+    fontSize: Number(s.fontSize) > 0 ? Math.max(8, Math.min(60, Number(s.fontSize))) : 0,
     bold: !!s.bold,
     italic: !!s.italic,
     bullets: (s.bullets || []).map((b) => String(b).trim()).filter(Boolean),
   }));
-  const shownSections = sections.map((s) => ({
-    ...s,
-    shown: s.bullets.slice(0, maxPerCard),
-    extra: Math.max(0, s.bullets.length - maxPerCard),
-  }));
-  const bulletLines = Math.max(0, ...shownSections.map((s) => s.shown.length));
+  const bulletLines = Math.max(0, ...sections.map((s) => s.bullets.length));
   const bSize = bulletSize(sections.flatMap((s) => s.bullets));
+
+  /* ── Auto-fit: shrink bullet text so EVERYTHING fits inside the fixed 1080×1350 canvas ── */
+  const gridRef = useRef(null);
+  const [fitScale, setFitScale] = useState(1);
+  const fitKeyRef = useRef(null);
+  const fitKey = `${templateId}|${layout}|${sections.map((s) => `${s.id}:${s.bullets.length}`).join("|")}`;
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const container = grid.parentElement;
+    if (!container) return;
+    const cards = [...grid.children].filter((c) => c.style && c.style.borderRadius);
+    if (!cards.length) return;
+    // Required height: stacked = one row per card (sum); 2-column = rows of card pairs (max).
+    const rowGap = parseFloat(getComputedStyle(grid).rowGap) || 0;
+    const singleCol = stacked || sections.length === 1;
+    let required = 0;
+    if (singleCol) {
+      required = cards.reduce((s, c) => s + c.scrollHeight, 0) + rowGap * (cards.length - 1);
+    } else {
+      for (let i = 0; i < cards.length; i += 2) {
+        const a = cards[i].scrollHeight;
+        const b = cards[i + 1] ? cards[i + 1].scrollHeight : 0;
+        required += Math.max(a, b);
+        if (i + 2 < cards.length) required += rowGap;
+      }
+    }
+    // Available: what the grid can use after the header (above) and footer (below).
+    // offset* values are layout pixels (unscaled), so they stay correct in the scaled preview.
+    const gridTop = grid.offsetTop - container.offsetTop;
+    const kids = [...container.children];
+    const gridIdx = kids.indexOf(grid);
+    const afterH = kids.slice(gridIdx + 1).reduce((s, k) => s + k.offsetHeight, 0);
+    const avail = container.offsetHeight - gridTop - afterH;
+    if (avail <= 40) return;
+    // Content changed (bullets added/removed) — re-fit from scratch instead of inheriting a stale scale.
+    if (fitKeyRef.current !== fitKey) {
+      fitKeyRef.current = fitKey;
+      if (fitScale !== 1) {
+        setFitScale(1);
+        return; // re-measure on the next pass once the fresh scale is applied
+      }
+      // fitScale is already 1 — fall through and measure the new content now.
+    }
+    if (required > avail + 2) {
+      // Overflowing: shrink proportionally (floor at 0.35× so extreme JDs still fit)
+      const target = Math.max(0.35, (avail / required) * fitScale);
+      if (target < fitScale - 0.004) setFitScale(target);
+    } else if (fitScale < 0.999 && required < avail * 0.9) {
+      // Plenty of room: grow back toward the auto size (never above 1)
+      setFitScale(Math.min(1, fitScale * 1.12));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, layout, templateId, stacked, fitScale, fitKey]);
 
   const markerGlow = (color) => (t.neon ? `0 0 12px ${color}` : `0 0 8px ${color}66`);
 
@@ -573,17 +633,19 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         >
           <BriefcaseIcon size={20} color="#ffffff" />
         </span>
-        <span
+        <EditableText
+          value={(data.badgeText || "").trim() || "We Are Hiring"}
+          onCommit={(v) => onFieldChange?.("badgeText", v)}
+          label="Badge text"
           style={{
             fontSize: 21,
             letterSpacing: "0.3em",
             textTransform: "uppercase",
             fontWeight: 800,
             color: C.navyDark,
+            whiteSpace: "nowrap",
           }}
-        >
-          {(data.badgeText || "").trim() || "We Are Hiring"}
-        </span>
+        />
       </div>
     </div>
   ) : tHiring ? (
@@ -610,7 +672,10 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             boxShadow: "0 0 10px #f59e0b",
           }}
         />
-        <span
+        <EditableText
+          value={(data.badgeText || "").trim() || "We're Hiring"}
+          onCommit={(v) => onFieldChange?.("badgeText", v)}
+          label="Badge text"
           style={{
             fontSize: 24,
             fontWeight: 900,
@@ -619,9 +684,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             color: "#ffffff",
             whiteSpace: "nowrap",
           }}
-        >
-          {(data.badgeText || "").trim() || "We're Hiring"}
-        </span>
+        />
       </div>
     </div>
   ) : (
@@ -647,24 +710,30 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             boxShadow: t.banner ? "none" : "0 0 10px rgba(255,255,255,0.9)",
           }}
         />
-        <span
+        <EditableText
+          value={(data.badgeText || "").trim() || "We Are Hiring"}
+          onCommit={(v) => onFieldChange?.("badgeText", v)}
+          label="Badge text"
           style={{
             fontSize: 21,
             letterSpacing: "0.34em",
             textTransform: "uppercase",
             fontWeight: 800,
             color: t.banner ? t.accent : t.badgeText,
+            whiteSpace: "nowrap",
           }}
-        >
-          {(data.badgeText || "").trim() || "We Are Hiring"}
-        </span>
+        />
       </div>
     </div>
   );
 
   const introBlock = show.intro ? (
-    <p
+    <EditableText
+      value={introText}
+      onCommit={(v) => onFieldChange?.("introText", v)}
+      label="Intro phrase"
       style={{
+        display: "block",
         marginTop: 24,
         textAlign: "center",
         fontSize: 17,
@@ -675,64 +744,34 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         marginLeft: "auto",
         marginRight: "auto",
       }}
-    >
-      {introText}
-    </p>
+    />
   ) : null;
 
-  const titleBlock = corp
-    ? titleColor
-      ? (
-          <h1
-            style={{
-              marginTop: 20,
-              textAlign: "center",
-              fontFamily: SANS,
-              fontSize: titleSize(title),
-              fontWeight: 800,
-              lineHeight: 1.14,
-              letterSpacing: "-0.01em",
-              color: titleColor,
-            }}
-          >
-            {title}
-          </h1>
-        )
-      : (() => {
-          const { a, b } = splitTitle(title);
-          return (
-            <h1
-              style={{
-                marginTop: 20,
-                textAlign: "center",
-                fontFamily: SANS,
-                fontSize: titleSize(title),
-                fontWeight: 800,
-                lineHeight: 1.14,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <span style={{ color: C.navyDark }}>{a}</span>
-              {b ? <span style={{ color: C.red }}> {b}</span> : null}
-            </h1>
-          );
-        })()
-    : (
-        <h1
-          style={{
-            marginTop: 24,
-            textAlign: "center",
-            fontFamily: serifTitle ? SERIF : SANS,
-            fontSize: titleSize(title),
-            fontWeight: 800,
-            lineHeight: 1.12,
-            letterSpacing: "-0.01em",
-            color: titleColor || (t.banner ? "#ffffff" : t.title),
-          }}
-        >
-          {title}
-        </h1>
-      );
+  const twoTone = corp && !titleColor;
+  const titlePct = titleSplitPct(title);
+  const titleBlock = (
+    <EditableText
+      value={title}
+      onCommit={(v) => onFieldChange?.("title", v)}
+      label="Job title"
+      style={{
+        display: "block",
+        marginTop: corp ? 20 : 24,
+        textAlign: "center",
+        fontFamily: corp || !serifTitle ? SANS : SERIF,
+        fontSize: titleSize(title),
+        fontWeight: 800,
+        lineHeight: corp ? 1.14 : 1.12,
+        letterSpacing: "-0.01em",
+        color: twoTone ? "transparent" : titleColor || (t.banner ? "#ffffff" : t.title),
+        backgroundImage: twoTone
+          ? `linear-gradient(90deg, ${C.navyDark} 0%, ${C.navyDark} ${titlePct}%, ${C.red} ${titlePct}%, ${C.red} 100%)`
+          : undefined,
+        WebkitBackgroundClip: twoTone ? "text" : undefined,
+        backgroundClip: twoTone ? "text" : undefined,
+      }}
+    />
+  );
 
   const chipBlock = companyType ? (
     <div style={{ display: "flex", justifyContent: "center", marginTop: 22 }}>
@@ -748,9 +787,12 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         }}
       >
         <BriefcaseIcon size={20} color={corp ? C.navy : t.banner ? "#ffffff" : t.tileBIcon} />
-        <span style={{ fontSize: 22, color: corp ? C.navy : t.banner ? "#ffffff" : t.chipText, fontWeight: 700 }}>
-          {companyType}
-        </span>
+        <EditableText
+          value={companyType}
+          onCommit={(v) => onFieldChange?.("companyType", v)}
+          label="Company type"
+          style={{ fontSize: 22, color: corp ? C.navy : t.banner ? "#ffffff" : t.chipText, fontWeight: 700 }}
+        />
       </div>
     </div>
   ) : null;
@@ -785,30 +827,34 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           <CalendarIcon size={22} color="#ffffff" />
         </div>
         <span style={{ fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "0.14em", textTransform: "uppercase", paddingTop: 8 }}>
-          {deadline ? `Deadline: ${deadline}` : "Deadline: URGENT"}
+          Deadline:{" "}
+          <EditableText
+            value={deadline || "URGENT"}
+            onCommit={(v) => onFieldChange?.("deadline", v)}
+            label="Deadline"
+            style={{ fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "0.14em", textTransform: "uppercase" }}
+          />
         </span>
         <span style={{ width: 20, height: 1 }} />
       </div>
     </div>
   ) : null;
 
-  const infoBar = (
-    <div
-      style={{
-        marginTop: 30,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexWrap: "wrap",
-        gap: "20px 40px",
-        padding: "22px 30px",
-        borderRadius: 24,
-        background: t.infoBg,
-        border: t.infoBorder === "none" ? "none" : `1px solid ${t.infoBorder}`,
-        boxShadow: t.infoShadow === "none" ? "none" : t.infoShadow,
-      }}
-    >
-      {show.deadline && deadline ? (
+  const infoBar =
+    show.deadline && deadline ? (
+      <div
+        style={{
+          marginTop: 30,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "22px 30px",
+          borderRadius: 24,
+          background: t.infoBg,
+          border: t.infoBorder === "none" ? "none" : `1px solid ${t.infoBorder}`,
+          boxShadow: t.infoShadow === "none" ? "none" : t.infoShadow,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div
             style={{
@@ -828,54 +874,31 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             <div style={{ fontSize: 14, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, color: t.label }}>
               Deadline
             </div>
-            <div style={{ marginTop: 4, fontSize: 21, fontWeight: 800, color: t.value }}>{deadline}</div>
+            <EditableText
+              value={deadline}
+              onCommit={(v) => onFieldChange?.("deadline", v)}
+              label="Deadline"
+              style={{ marginTop: 4, fontSize: 21, fontWeight: 800, color: t.value, display: "block" }}
+            />
           </div>
         </div>
-      ) : null}
-      {show.deadline && deadline && emails.length > 0 ? (
-        <div style={{ width: 1, height: 44, background: t.infoBorder === "none" ? "#e2e8f0" : t.infoBorder }} />
-      ) : null}
-      {emails.length > 0 ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 15,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: t.tileB,
-              border: t.tileBBorder === "none" ? "none" : `1px solid ${t.tileBBorder}`,
-              flexShrink: 0,
-            }}
-          >
-            <MailIcon size={24} color={t.tileBIcon} />
-          </div>
-          <div>
-            <div style={{ fontSize: 14, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, color: t.label }}>
-              Apply Via
-            </div>
-            <div style={{ marginTop: 4, fontSize: 20, fontWeight: 800, color: t.value, wordBreak: "break-all" }}>
-              {primaryEmail}
-              {extraEmails > 0 ? <span style={{ color: t.tileBIcon }}> +{extraEmails} more</span> : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
+      </div>
+    ) : null;
 
   /* ── Section cards ── */
+  // When the auto-fit shrinks text, also compact card spacing so everything fits.
+  const comp = 0.55 + 0.45 * fitScale;
+  // No overflow:hidden — the auto-fit measures the grid's true content height.
   const cardBase = {
     borderRadius: t.borderless ? 24 : 26,
     background: cardBgColor || t.cardBg,
     border: t.borderless ? "none" : `1px solid ${t.cardBorder}`,
     boxShadow: t.borderless ? "none" : t.cardShadow,
-    padding: stacked ? "24px 28px" : t.borderless ? "26px 26px" : "30px 30px",
+    padding: stacked
+      ? `${Math.round(24 * comp)}px ${Math.round(28 * comp)}px`
+      : `${Math.round((t.borderless ? 26 : 30) * comp)}px ${Math.round(30 * comp)}px`,
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden",
   };
 
   const sectionKind = (idx) => (idx === 0 ? "resp" : idx === 1 ? "req" : idx % 2 === 0 ? "resp" : "req");
@@ -884,7 +907,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     if (s.showHeading === false) return null;
     const kind = sectionKind(idx);
     return corp ? (
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: stacked ? 16 : 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: Math.round((stacked ? 16 : 22) * comp) }}>
         <div
           style={{
             display: "inline-flex",
@@ -892,7 +915,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             gap: 10,
             background: C.navy,
             borderRadius: 999,
-            padding: "11px 24px",
+            padding: `${Math.round(11 * comp)}px ${Math.round(24 * comp)}px`,
             boxShadow: "0 8px 20px rgba(27,49,103,0.28)",
           }}
         >
@@ -901,7 +924,7 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             value={s.heading}
             onCommit={(text) => onHeadingChange?.(s.id, text)}
             style={{
-              fontSize: 15.5,
+              fontSize: 15.5 * fitScale,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
               fontWeight: 800,
@@ -925,11 +948,11 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         </div>
       </div>
     ) : (
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: stacked ? 16 : 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: Math.round((stacked ? 16 : 22) * comp) }}>
         <div
           style={{
-            width: 48,
-            height: 48,
+            width: Math.round(48 * comp),
+            height: Math.round(48 * comp),
             borderRadius: 13,
             display: "flex",
             alignItems: "center",
@@ -939,13 +962,13 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             flexShrink: 0,
           }}
         >
-          {kind === "resp" ? <ListIcon size={23} color={t.tileBIcon} /> : <CheckIcon size={23} color={t.tileBIcon} />}
+          {kind === "resp" ? <ListIcon size={Math.round(23 * comp)} color={t.tileBIcon} /> : <CheckIcon size={Math.round(23 * comp)} color={t.tileBIcon} />}
         </div>
         <EditableText
           value={s.heading}
           onCommit={(text) => onHeadingChange?.(s.id, text)}
           style={{
-            fontSize: 16,
+            fontSize: 16 * fitScale,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
             fontWeight: 800,
@@ -957,10 +980,10 @@ const PosterCanvas = forwardRef(function PosterCanvas(
     );
   };
 
-  const bulletList = (items, kind, extra, s) => (
+  const bulletList = (items, kind, s) => (
     <div>
       {items.map((item, i) => (
-        <div key={i} style={{ display: "flex", gap: 13, alignItems: "flex-start", marginBottom: 14 }}>
+        <div key={i} style={{ display: "flex", gap: 13, alignItems: "flex-start", marginBottom: Math.round(14 * comp) }}>
           <span
             style={{
               width: 9,
@@ -968,38 +991,35 @@ const PosterCanvas = forwardRef(function PosterCanvas(
               borderRadius: "50%",
               background: kind === "resp" ? t.markerA : t.markerB,
               boxShadow: markerGlow(kind === "resp" ? t.markerA : t.markerB),
-              marginTop: bulletLines > 5 ? 9 : 11,
+              marginTop: Math.round((bulletLines > 5 ? 9 : 11) * comp),
               flexShrink: 0,
             }}
           />
-          <span
+          <EditableText
+            value={item}
+            onCommit={(v) => onBulletChange?.(s.id, i, v)}
+            label="Bullet text"
             style={{
-              fontSize: s && s.fontSize > 0 ? s.fontSize : bSize,
+              fontSize: (s.fontSize > 0 ? s.fontSize : bSize) * fitScale,
               lineHeight: 1.5,
               color: t.body,
-              fontWeight: s && s.bold ? 700 : 400,
-              fontStyle: s && s.italic ? "italic" : "normal",
+              fontWeight: s.bold ? 700 : 400,
+              fontStyle: s.italic ? "italic" : "normal",
+              flex: 1,
             }}
-          >
-            {item}
-          </span>
+          />
         </div>
       ))}
-      {extra > 0 ? (
-        <div style={{ fontSize: 16, color: t.tileBIcon, fontWeight: 700, marginTop: 2 }}>
-          … and {extra} more in the full JD
-        </div>
-      ) : null}
     </div>
   );
 
-  const sectionCard = (s, idx) => (
-    <div key={s.id} style={cardBase}>
+  const sectionCard = (s, idx, lastSpan) => (
+    <div key={s.id} style={lastSpan ? { ...cardBase, gridColumn: "1 / -1" } : cardBase}>
       {sectionHeader(s, idx)}
-      {s.shown.length === 0 ? (
+      {s.bullets.length === 0 ? (
         <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>Not provided</div>
       ) : (
-        bulletList(s.shown, sectionKind(idx), s.extra, s)
+        bulletList(s.bullets, sectionKind(idx), s)
       )}
     </div>
   );
@@ -1061,7 +1081,12 @@ const PosterCanvas = forwardRef(function PosterCanvas(
             >
               <MailIcon size={15} color="#ffffff" />
             </span>
-            <span style={{ fontSize: 18.5, fontWeight: 800, color: "#ffffff", wordBreak: "break-all" }}>{email}</span>
+            <EditableText
+              value={email}
+              onCommit={(v) => editEmail(i, v)}
+              label="Email address"
+              style={{ fontSize: 18.5, fontWeight: 800, color: "#ffffff", wordBreak: "break-all" }}
+            />
           </span>
         ))}
         {emails.length === 0 ? (
@@ -1095,7 +1120,12 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           >
             <PencilIcon size={17} color="#ffffff" />
           </span>
-          {data.noteText || "Mention applied position in MAIL SUBJECT."}
+          <EditableText
+            value={data.noteText || "Mention applied position in MAIL SUBJECT."}
+            onCommit={(v) => onFieldChange?.("noteText", v)}
+            label="Submission note"
+            style={{ color: "rgba(255,255,255,0.92)", fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}
+          />
         </span>
       </div>
     </div>
@@ -1132,15 +1162,23 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         </span>
         <div style={{ flex: 1, height: 1, background: t.cardBorder }} />
       </div>
-      <p style={{ margin: "13px 0 0", fontSize: 18, lineHeight: 1.55, color: t.body }}>
-        {data.noteText || "Please mention the position applied for in the subject line."}
-      </p>
+      <EditableText
+        value={data.noteText || "Please mention the position applied for in the subject line."}
+        onCommit={(v) => onFieldChange?.("noteText", v)}
+        label="Submission note"
+        style={{ display: "block", margin: "13px 0 0", fontSize: 18, lineHeight: 1.55, color: t.body }}
+      />
       {emails.length > 0 ? (
         <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: "10px 28px" }}>
           {emails.slice(0, 4).map((email, i) => (
             <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
               <MailIcon size={17} color={t.accent} />
-              <span style={{ fontSize: 18, fontWeight: 700, color: t.accent, wordBreak: "break-all" }}>{email}</span>
+              <EditableText
+                value={email}
+                onCommit={(v) => editEmail(i, v)}
+                label="Email address"
+                style={{ fontSize: 18, fontWeight: 700, color: t.accent, wordBreak: "break-all" }}
+              />
             </span>
           ))}
         </div>
@@ -1185,9 +1223,12 @@ const PosterCanvas = forwardRef(function PosterCanvas(
           <span style={{ fontSize: 20, fontWeight: 800, color: t.ctaText }}>Apply Now</span>
         </div>
         {primaryEmail ? (
-          <span style={{ fontSize: 16, color: "rgba(255,255,255,0.88)", fontWeight: 600, wordBreak: "break-all", textAlign: "right" }}>
-            {primaryEmail}
-          </span>
+          <EditableText
+            value={primaryEmail}
+            onCommit={(v) => editEmail(0, v)}
+            label="Email address"
+            style={{ fontSize: 16, color: "rgba(255,255,255,0.88)", fontWeight: 600, wordBreak: "break-all", textAlign: "right", display: "block" }}
+          />
         ) : null}
       </div>
     </div>
@@ -1222,20 +1263,22 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         style={{
           marginTop: 30,
           display: "grid",
-          gridTemplateColumns: stacked ? "1fr" : "1fr 1fr",
+          gridTemplateColumns: stacked || sections.length === 1 ? "1fr" : "1fr 1fr",
           gap: stacked ? 18 : 26,
-          flexGrow: 1,
           alignItems: "stretch",
         }}
+        ref={gridRef}
       >
-        {shownSections.length === 0 ? (
+        {sections.length === 0 ? (
           <div style={cardBase}>
             <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>
               Add sections in the left panel to build the poster.
             </div>
           </div>
         ) : (
-          shownSections.map((s, idx) => sectionCard(s, idx))
+          sections.map((s, idx) =>
+            sectionCard(s, idx, !stacked && sections.length % 2 === 1 && idx === sections.length - 1)
+          )
         )}
       </div>
       <div style={{ marginTop: "auto", paddingTop: 30 }}>{show.footer ? pleaseNote : null}</div>
@@ -1249,20 +1292,22 @@ const PosterCanvas = forwardRef(function PosterCanvas(
         style={{
           marginTop: 34,
           display: "grid",
-          gridTemplateColumns: stacked ? "1fr" : "1fr 1fr",
+          gridTemplateColumns: stacked || sections.length === 1 ? "1fr" : "1fr 1fr",
           gap: stacked ? 18 : t.borderless ? 16 : 26,
-          flexGrow: 1,
           alignItems: "stretch",
         }}
+        ref={gridRef}
       >
-        {shownSections.length === 0 ? (
+        {sections.length === 0 ? (
           <div style={cardBase}>
             <div style={{ fontSize: 19, color: t.label, fontStyle: "italic" }}>
               Add sections in the left panel to build the poster.
             </div>
           </div>
         ) : (
-          shownSections.map((s, idx) => sectionCard(s, idx))
+          sections.map((s, idx) =>
+            sectionCard(s, idx, !stacked && sections.length % 2 === 1 && idx === sections.length - 1)
+          )
         )}
       </div>
     );
