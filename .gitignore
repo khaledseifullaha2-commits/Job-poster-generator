@@ -1,3 +1,7 @@
+# Dependencies and build output
+node_modules/
+dist/
+
 # Freebuff tool state (databases, logs, run docs) — never commit
 .freebuff/
 
@@ -7,8 +11,17 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Vercel
 .vercel
 
 # Skills CLI machine-specific symlink dirs (recreated on install; point at absolute local paths)
 .claude/
 agent/
+.agents/
+skills-lock.json
+
+# Unrelated local projects kept on disk but not part of this repo
+portfolio/
+about-photo.jpg
+hero-photo.jpg

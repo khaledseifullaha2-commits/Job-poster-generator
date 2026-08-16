@@ -1,7 +1,8 @@
 # Job Poster Generator (standalone app)
 
-A fully isolated React app (Vite + React) for building 1080×1350 recruitment
-posters. Lives in its own folder so it never touches the `portfolio/` project.
+A standalone React app (Vite + React) for building 1080×1350 recruitment
+posters. This repository is dedicated to the generator — a clean, self-contained
+project with no unrelated folders inside.
 
 ## Features
 
@@ -73,7 +74,6 @@ posters. Lives in its own folder so it never touches the `portfolio/` project.
 ## Run it
 
 ```bash
-cd job-poster-app
 npm install
 npm run dev        # → http://127.0.0.1:5174
 ```
@@ -88,17 +88,16 @@ npm run preview
 ## Structure
 
 ```
-job-poster-app/
-  index.html                # entry HTML + self-hosted fonts
-  public/fonts/             # Inter + Playfair Display woff2 (same-origin for exports)
-  scripts/fetch-fonts.mjs   # regenerates public/fonts from Google Fonts
-  src/
-    main.jsx                # React root
-    App.jsx                 # split-screen studio, mode toggle, themes, layouts, graphics, export
-    PosterCanvas.jsx        # fixed 1080×1350 canvas (header, cards, footer, corporate path, SVGs)
-    templates.js            # themes (Navy/Red/Green/Black-White) + 7 templates + palette resolver
-    lib/extractLocal.js     # zero-API regex parser + optional browser Gemini client
-    styles.css              # app chrome (dark split-screen shell)
+index.html                # entry HTML + self-hosted fonts
+public/fonts/             # Inter + Playfair Display woff2 (same-origin for exports)
+scripts/fetch-fonts.mjs   # regenerates public/fonts from Google Fonts
+src/
+  main.jsx                # React root
+  App.jsx                 # split-screen studio, mode toggle, themes, layouts, graphics, export
+  PosterCanvas.jsx        # fixed 1080×1350 canvas (header, cards, footer, corporate path, SVGs)
+  templates.js            # themes (Navy/Red/Green/Black-White) + 10 templates + palette resolver
+  lib/extractLocal.js     # zero-API regex parser + optional browser Gemini client
+  styles.css              # app chrome (dark split-screen shell)
 ```
 
 ## AI mode note
