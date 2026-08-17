@@ -22,6 +22,5 @@ agent/
 skills-lock.json
 
 # Unrelated local projects kept on disk but not part of this repo
-portfolio/
 about-photo.jpg
 hero-photo.jpg
